@@ -1837,3 +1837,177 @@ body {
   .achievements-grid { grid-template-columns: 1fr; }
   .sidebar-footer .user-info { display: none; }
 }
+
+/* ═══════════════ PROMPTS DATABASE ═══════════════ */
+.prompts-db-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+.prompt-db-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); overflow: hidden;
+  transition: all var(--transition); position: relative;
+}
+.prompt-db-card:hover {
+  border-color: rgba(201,168,76,0.4);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.prompt-db-card-image {
+  width: 100%; height: 200px; object-fit: cover;
+  display: block; border-bottom: 1px solid var(--border);
+  background: var(--bg-glass);
+}
+.prompt-db-card-body { padding: 16px 18px; }
+.prompt-db-card-text {
+  font-family: 'Courier New', monospace;
+  font-size: 0.82rem; color: var(--text-primary);
+  background: var(--bg-glass); border-radius: var(--radius-sm);
+  padding: 12px 14px; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;
+  max-height: 150px; overflow-y: auto;
+  border: 1px solid var(--border);
+}
+.prompt-db-card-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 12px;
+}
+.prompt-db-category {
+  font-size: 0.75rem; padding: 3px 10px;
+  border-radius: 12px; font-weight: 600;
+}
+.prompt-db-actions {
+  display: flex; gap: 4px;
+  opacity: 0; transition: opacity var(--transition);
+}
+.prompt-db-card:hover .prompt-db-actions { opacity: 1; }
+.prompt-db-copy-btn {
+  padding: 5px 12px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg-glass); color: var(--text-secondary);
+  font-size: 0.75rem; cursor: pointer; transition: all var(--transition);
+  display: flex; align-items: center; gap: 4px;
+}
+.prompt-db-copy-btn:hover {
+  background: rgba(201,168,76,0.12); color: var(--accent-gold);
+  border-color: rgba(201,168,76,0.3);
+}
+
+/* ═══════════════ TARIFFS ═══════════════ */
+.tariffs-promo-banner {
+  background: linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(212,148,58,0.08) 100%);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+  font-size: 0.95rem; font-weight: 600;
+  color: var(--accent-gold);
+  text-align: center;
+  margin-bottom: 28px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+.tariffs-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px; margin-bottom: 32px;
+}
+.tariff-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 28px 24px;
+  text-align: center; transition: all var(--transition);
+  position: relative; overflow: hidden;
+}
+.tariff-card:hover {
+  border-color: rgba(201,168,76,0.4);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-glow), var(--shadow-lg);
+}
+.tariff-card.current {
+  border-color: var(--accent-gold);
+  box-shadow: 0 0 0 2px rgba(201,168,76,0.2);
+}
+.tariff-card.current::after {
+  content: 'Ваш тариф';
+  position: absolute; top: 12px; right: -28px;
+  background: var(--gradient-gold); color: #2D2319;
+  font-size: 0.65rem; font-weight: 700;
+  padding: 3px 32px; transform: rotate(45deg);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.tariff-card-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px; font-size: 1.8rem;
+}
+.tariff-card-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.3rem; font-weight: 700;
+  color: var(--text-primary); margin-bottom: 8px;
+}
+.tariff-card-pricing { margin-bottom: 20px; }
+.tariff-old-price {
+  font-size: 1rem; color: var(--text-muted);
+  text-decoration: line-through;
+  margin-right: 8px;
+}
+.tariff-price {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 2rem; font-weight: 800;
+  color: var(--accent-gold);
+}
+.tariff-price-currency {
+  font-size: 1rem; font-weight: 500; color: var(--text-secondary);
+}
+.tariff-benefits {
+  list-style: none; text-align: left;
+  padding: 0; margin: 0 0 20px;
+}
+.tariff-benefits li {
+  padding: 8px 0; font-size: 0.85rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+}
+.tariff-benefits li:last-child { border-bottom: none; }
+.tariff-benefits li::before {
+  content: '✓'; color: var(--accent-green);
+  font-weight: 700; flex-shrink: 0;
+}
+.tariff-card-btn {
+  width: 100%; padding: 12px; border-radius: var(--radius-md);
+  border: 1px solid rgba(201,168,76,0.3);
+  background: rgba(201,168,76,0.08);
+  color: var(--accent-gold); font-weight: 600;
+  font-size: 0.88rem; cursor: pointer;
+  transition: all var(--transition);
+}
+.tariff-card-btn:hover {
+  background: var(--accent-gold); color: #2D2319;
+}
+.tariff-admin-edit {
+  position: absolute; top: 8px; left: 8px;
+  opacity: 0; transition: opacity var(--transition);
+}
+.tariff-card:hover .tariff-admin-edit { opacity: 1; }
+.tariffs-contact {
+  text-align: center; padding: 24px;
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.tariffs-contact p {
+  font-size: 0.9rem; color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+.tariffs-tg-link {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 28px; border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #0088cc, #0099dd);
+  color: white; text-decoration: none;
+  font-size: 1rem; font-weight: 700;
+  transition: all var(--transition);
+  box-shadow: 0 4px 16px rgba(0,136,204,0.3);
+}
+.tariffs-tg-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0,136,204,0.4);
+}
+.tariffs-tg-link svg {
+  width: 22px; height: 22px;
+}

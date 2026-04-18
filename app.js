@@ -212,7 +212,7 @@ function startSession(user) {
 
 // Load user-specific data from server
 async function loadUserData(userId) {
-  const [users, courses, progress, favorites, glossary, achievementsDef, earnedAch] = await Promise.all([
+  const [users, courses, progress, favorites, glossary, achievementsDef, earnedAch, promptsDb, tariffs] = await Promise.all([
     api('/api/users'),
     api('/api/courses'),
     api('/api/progress/' + userId),
@@ -220,6 +220,8 @@ async function loadUserData(userId) {
     api('/api/glossary'),
     api('/api/kv/achievements_def'),
     api('/api/kv/achievements_' + userId),
+    api('/api/kv/prompts_db'),
+    api('/api/kv/tariffs'),
   ]);
   _cache.users = users || [];
   _cache.courses = courses || [];
@@ -231,6 +233,8 @@ async function loadUserData(userId) {
   }
   if (!_cache._earnedAchievements) _cache._earnedAchievements = {};
   _cache._earnedAchievements[userId] = earnedAch || {};
+  if (promptsDb && Array.isArray(promptsDb)) _cache._promptsDb = promptsDb;
+  if (tariffs && Array.isArray(tariffs) && tariffs.length > 0) _cache._tariffs = tariffs;
 }
 
 function handleLogout() {
@@ -277,8 +281,26 @@ function showView(viewName) {
   const navEl = document.getElementById(`nav-${viewName}`);
   if (navEl) navEl.classList.add('active');
 
-  const labels = { dashboard: 'Дашборд', courses: 'Курсы', favorites: 'Избранное', progress: 'Мой прогресс', achievements: 'Достижения', 'achievements-admin': 'Управление достижениями', glossary: 'Глоссарий', users: 'Пользователи', 'course-editor': 'Редактор курса', lesson: 'Урок' };
+  const labels = { dashboard: 'Дашборд', courses: 'Курсы', favorites: 'Избранное', progress: 'Мой прогресс', achievements: 'Достижения', 'achievements-admin': 'Управление достижениями', glossary: 'Глоссарий', 'prompts-db': 'База промптов', tariffs: 'Тарифы', users: 'Пользователи', 'course-editor': 'Редактор курса', lesson: 'Урок' };
   document.getElementById('breadcrumb').textContent = labels[viewName] || '';
+
+  // Access control for glossary (requires Lite+)
+  if (viewName === 'glossary' && currentUser) {
+    const isNovice = currentUser.role === 'novice';
+    const isAdmin = currentUser.role === 'admin';
+    document.getElementById('glossaryGate').style.display = (isNovice && !isAdmin) ? 'block' : 'none';
+    document.getElementById('glossaryContent').style.display = (isNovice && !isAdmin) ? 'none' : 'block';
+  }
+
+  // Access control for prompts-db (requires Standard+)
+  if (viewName === 'prompts-db' && currentUser) {
+    const ROLES_ORDER = ['novice', 'lite', 'standard', 'pro', 'admin'];
+    const userIdx = ROLES_ORDER.indexOf(currentUser.role);
+    const needIdx = ROLES_ORDER.indexOf('standard');
+    const hasAccess = userIdx >= needIdx;
+    document.getElementById('promptsDbGate').style.display = hasAccess ? 'none' : 'block';
+    document.getElementById('promptsDbContent').style.display = hasAccess ? 'block' : 'none';
+  }
 
   if (viewName === 'dashboard')          renderDashboard();
   if (viewName === 'courses')            renderCourses();
@@ -287,6 +309,8 @@ function showView(viewName) {
   if (viewName === 'achievements')       renderAchievements();
   if (viewName === 'achievements-admin') renderAchievementsAdmin();
   if (viewName === 'glossary')           renderGlossary();
+  if (viewName === 'prompts-db')         renderPromptsDb();
+  if (viewName === 'tariffs')            renderTariffs();
   if (viewName === 'users')              renderUsers();
 
   // Close mobile sidebar
@@ -895,12 +919,23 @@ function submitQuiz(lesson) {
   resultEl.innerHTML = `<div class="quiz-results">
     <div class="quiz-score">${correct}/${total}</div>
     <div class="quiz-score-label">${passed ? '🎉 Отлично! Тест пройден!' : '❌ Попробуйте ещё раз (нужно 70%)'}</div>
+    ${!passed ? '<button class="btn-primary" style="margin-top:16px" onclick="retryQuiz()">🔄 Начать тест заново</button>' : ''}
   </div>`;
 
   if (passed && currentUser) {
     markLessonCompleted(viewingLessonId);
     document.getElementById('practiceSubmitBtn').style.display = 'none';
-    checkCourseCertificate();
+  }
+}
+
+function retryQuiz() {
+  // Re-render the current lesson to reset quiz state
+  if (viewingLessonId) {
+    const courses = getCourses();
+    for (const c of courses) {
+      const lesson = (c.lessons || []).find(l => l.id === viewingLessonId);
+      if (lesson) { openLesson(c.id, lesson.id); return; }
+    }
   }
 }
 
@@ -2426,3 +2461,217 @@ function addDemoGlossary() {
 
 // Check achievements on load
 setTimeout(function() { if (currentUser) checkAndAwardAchievements(); }, 1000);
+
+// ═══════════════════════════════════════════
+// PROMPTS DATABASE
+// ═══════════════════════════════════════════
+
+function getPromptsDb() { return _cache._promptsDb || []; }
+function savePromptsDb(data) {
+  _cache._promptsDb = data;
+  api('/api/kv/prompts_db', { method: 'PUT', body: data });
+}
+
+const PROMPT_CATEGORIES = {
+  images: { label: '🎨 Изображения', cls: 'badge-gold' },
+  text: { label: '✍️ Текст', cls: 'badge-blue' },
+  video: { label: '🎬 Видео', cls: 'badge-purple' },
+  code: { label: '💻 Код', cls: 'badge-green' },
+  other: { label: '📦 Другое', cls: 'badge-gray' }
+};
+
+function renderPromptsDb() {
+  const grid = document.getElementById('prompts-db-grid');
+  if (!grid) return;
+  const prompts = getPromptsDb();
+  const isAdmin = currentUser && currentUser.role === 'admin';
+
+  if (prompts.length === 0) {
+    grid.innerHTML = `<div class="empty-state">
+      <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+      <h3>Промптов пока нет</h3>
+      <p>${isAdmin ? 'Добавьте первый промпт' : 'Скоро здесь появятся готовые промпты'}</p>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = prompts.map(p => {
+    const cat = PROMPT_CATEGORIES[p.category] || PROMPT_CATEGORIES.other;
+    return `<div class="prompt-db-card">
+      ${p.image ? `<img class="prompt-db-card-image" src="${p.image}" alt="Результат промпта" onerror="this.style.display='none'" />` : ''}
+      <div class="prompt-db-card-body">
+        <div class="prompt-db-card-text">${escapeHtml(p.text)}</div>
+        <div class="prompt-db-card-meta">
+          <span class="badge ${cat.cls} prompt-db-category">${cat.label}</span>
+          <div class="prompt-db-actions">
+            <button class="prompt-db-copy-btn" onclick="copyPromptText('${p.id}')">📋 Копировать</button>
+            ${isAdmin ? `<button class="card-action-btn" onclick="editPromptDb('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            <button class="card-action-btn danger" onclick="deletePromptDb('${p.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function copyPromptText(id) {
+  const prompt = getPromptsDb().find(p => p.id === id);
+  if (prompt) {
+    navigator.clipboard.writeText(prompt.text).then(() => {
+      showToast('Промпт скопирован!', 'success');
+    });
+  }
+}
+
+function openPromptDbModal(id) {
+  const isEdit = !!id;
+  document.getElementById('promptDbModalTitle').textContent = isEdit ? 'Редактировать промпт' : 'Добавить промпт';
+  document.getElementById('editingPromptDbId').value = id || '';
+
+  if (isEdit) {
+    const p = getPromptsDb().find(x => x.id === id);
+    if (p) {
+      document.getElementById('promptDbText').value = p.text;
+      document.getElementById('promptDbCategory').value = p.category || 'images';
+      document.getElementById('promptDbImageUrl').value = p.image || '';
+      const preview = document.getElementById('promptDbImagePreview');
+      if (p.image) { preview.src = p.image; preview.style.display = 'block'; }
+      else { preview.style.display = 'none'; }
+    }
+  } else {
+    document.getElementById('promptDbText').value = '';
+    document.getElementById('promptDbCategory').value = 'images';
+    document.getElementById('promptDbImageUrl').value = '';
+    document.getElementById('promptDbImagePreview').style.display = 'none';
+  }
+  document.getElementById('promptDbImageFile').value = '';
+  openModal('modalPromptDb');
+}
+
+function editPromptDb(id) { openPromptDbModal(id); }
+
+function handlePromptDbImage(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('promptDbImageUrl').value = ev.target.result;
+    const preview = document.getElementById('promptDbImagePreview');
+    preview.src = ev.target.result;
+    preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function savePromptDb() {
+  const text = document.getElementById('promptDbText').value.trim();
+  if (!text) { showToast('Введите текст промпта', 'error'); return; }
+
+  const id = document.getElementById('editingPromptDbId').value;
+  const category = document.getElementById('promptDbCategory').value;
+  const image = document.getElementById('promptDbImageUrl').value.trim();
+
+  const prompts = getPromptsDb();
+  if (id) {
+    const p = prompts.find(x => x.id === id);
+    if (p) { p.text = text; p.category = category; p.image = image; p.updatedAt = Date.now(); }
+  } else {
+    prompts.unshift({ id: genId(), text, category, image, createdAt: Date.now(), updatedAt: Date.now() });
+  }
+  savePromptsDb(prompts);
+  closeModal('modalPromptDb');
+  showToast(id ? 'Промпт обновлён' : 'Промпт добавлен', 'success');
+  renderPromptsDb();
+}
+
+function deletePromptDb(id) {
+  const prompts = getPromptsDb().filter(p => p.id !== id);
+  savePromptsDb(prompts);
+  showToast('Промпт удалён', 'info');
+  renderPromptsDb();
+}
+
+// ═══════════════════════════════════════════
+// TARIFFS
+// ═══════════════════════════════════════════
+
+const DEFAULT_TARIFFS = [
+  { role: 'novice', name: 'Новичок', icon: '🌱', price: 'Бесплатно', oldPrice: '', benefits: ['Доступ к базовым курсам', 'Просмотр уроков'] },
+  { role: 'lite', name: 'Лайт', icon: '💡', price: '', oldPrice: '', benefits: ['Всё из Новичок', 'Глоссарий терминов', 'Избранное'] },
+  { role: 'standard', name: 'Стандарт', icon: '⭐', price: '', oldPrice: '', benefits: ['Всё из Лайт', 'База промптов', 'Все курсы'] },
+  { role: 'pro', name: 'PRO', icon: '🚀', price: '', oldPrice: '', benefits: ['Всё из Стандарт', 'Приоритетная поддержка', 'Эксклюзивный контент'] }
+];
+
+function getTariffs() {
+  const saved = _cache._tariffs;
+  if (saved && Array.isArray(saved) && saved.length > 0) return saved;
+  _cache._tariffs = DEFAULT_TARIFFS;
+  saveTariffsData(DEFAULT_TARIFFS);
+  return DEFAULT_TARIFFS;
+}
+function saveTariffsData(data) {
+  _cache._tariffs = data;
+  api('/api/kv/tariffs', { method: 'PUT', body: data });
+}
+
+function renderTariffs() {
+  const grid = document.getElementById('tariffs-grid');
+  if (!grid) return;
+  const tariffs = getTariffs();
+  const isAdmin = currentUser && currentUser.role === 'admin';
+
+  grid.innerHTML = tariffs.map(t => {
+    const isCurrent = currentUser && currentUser.role === t.role;
+    const priceHtml = t.price === 'Бесплатно'
+      ? '<span class="tariff-price">Бесплатно</span>'
+      : (t.price
+        ? `${t.oldPrice ? `<span class="tariff-old-price">${t.oldPrice}</span>` : ''}<span class="tariff-price">${t.price}</span>`
+        : '<span class="tariff-price" style="font-size:1.2rem;color:var(--text-muted)">Цена не указана</span>');
+
+    return `<div class="tariff-card${isCurrent ? ' current' : ''}">
+      ${isAdmin ? `<div class="tariff-admin-edit"><button class="card-action-btn" onclick="openTariffModal('${t.role}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button></div>` : ''}
+      <div class="tariff-card-icon">${t.icon}</div>
+      <div class="tariff-card-name">${t.name}</div>
+      <div class="tariff-card-pricing">${priceHtml}</div>
+      <ul class="tariff-benefits">
+        ${(t.benefits || []).map(b => `<li>${b}</li>`).join('')}
+      </ul>
+      ${!isCurrent && t.role !== 'novice' ? '<button class="tariff-card-btn" onclick="window.open(\'https://t.me/assylbekov09\',\'_blank\')">Приобрести</button>' : ''}
+    </div>`;
+  }).join('');
+}
+
+function openTariffModal(role) {
+  const tariffs = getTariffs();
+  const t = tariffs.find(x => x.role === role);
+  if (!t) return;
+  document.getElementById('editingTariffRole').value = role;
+  document.getElementById('tariffModalTitle').textContent = 'Редактировать: ' + t.name;
+  document.getElementById('tariffPrice').value = t.price === 'Бесплатно' ? '' : (t.price || '');
+  document.getElementById('tariffOldPrice').value = t.oldPrice || '';
+  document.getElementById('tariffBenefits').value = (t.benefits || []).join('\n');
+  openModal('modalTariff');
+}
+
+function saveTariff() {
+  const role = document.getElementById('editingTariffRole').value;
+  const tariffs = getTariffs();
+  const t = tariffs.find(x => x.role === role);
+  if (!t) return;
+
+  const price = document.getElementById('tariffPrice').value.trim();
+  t.price = price || (role === 'novice' ? 'Бесплатно' : '');
+  t.oldPrice = document.getElementById('tariffOldPrice').value.trim();
+  t.benefits = document.getElementById('tariffBenefits').value.split('\n').map(s => s.trim()).filter(s => s);
+
+  saveTariffsData(tariffs);
+  closeModal('modalTariff');
+  showToast('Тариф обновлён', 'success');
+  renderTariffs();
+}

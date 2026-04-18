@@ -115,6 +115,14 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
       Глоссарий
     </button>
+    <button class="nav-item" id="nav-prompts-db" onclick="showView('prompts-db')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      База промптов
+    </button>
+    <button class="nav-item" id="nav-tariffs" onclick="showView('tariffs')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      Тарифы
+    </button>
     <!-- Admin only -->
     <button class="nav-item admin-only" id="nav-users" onclick="showView('users')" style="display:none">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -373,24 +381,81 @@
 
   <!-- ═══════════════ GLOSSARY ═══════════════ -->
   <section class="view" id="view-glossary">
+    <!-- Access gate for novice -->
+    <div id="glossaryGate" style="display:none">
+      <div class="empty-state">
+        <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <h3>Глоссарий доступен с тарифа Лайт</h3>
+        <p>Повысьте тариф, чтобы получить доступ к словарю терминов</p>
+        <button class="btn-primary" style="margin-top:16px" onclick="showView('tariffs')">Смотреть тарифы</button>
+      </div>
+    </div>
+    <div id="glossaryContent">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">Глоссарий 📖</h1>
+          <p class="view-subtitle">Словарь терминов ИИ и нейросетей</p>
+        </div>
+        <button class="btn-primary admin-only" id="glossaryAddBtn" onclick="openGlossaryModal()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить термин
+        </button>
+      </div>
+      <div class="glossary-search">
+        <div class="search-bar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Поиск терминов..." id="glossarySearch" oninput="filterGlossary(this.value)" />
+        </div>
+      </div>
+      <div class="glossary-alpha-bar" id="glossaryAlphaBar"></div>
+      <div class="glossary-grid" id="glossary-grid"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ PROMPTS DATABASE ═══════════════ -->
+  <section class="view" id="view-prompts-db">
+    <div id="promptsDbGate" style="display:none">
+      <div class="empty-state">
+        <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+        <h3>База промптов доступна с тарифа Стандарт</h3>
+        <p>Повысьте тариф, чтобы получить доступ к готовым промптам</p>
+        <button class="btn-primary" style="margin-top:16px" onclick="showView('tariffs')">Смотреть тарифы</button>
+      </div>
+    </div>
+    <div id="promptsDbContent">
+      <div class="view-header">
+        <div>
+          <h1 class="view-title">База промптов 🤖</h1>
+          <p class="view-subtitle">Готовые промпты для нейросетей</p>
+        </div>
+        <button class="btn-primary admin-only" id="promptsDbAddBtn" onclick="openPromptDbModal()" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить промпт
+        </button>
+      </div>
+      <div class="prompts-db-grid" id="prompts-db-grid"></div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ TARIFFS ═══════════════ -->
+  <section class="view" id="view-tariffs">
     <div class="view-header">
       <div>
-        <h1 class="view-title">Глоссарий 📖</h1>
-        <p class="view-subtitle">Словарь терминов ИИ и нейросетей</p>
-      </div>
-      <button class="btn-primary admin-only" id="glossaryAddBtn" onclick="openGlossaryModal()" style="display:none">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Добавить термин
-      </button>
-    </div>
-    <div class="glossary-search">
-      <div class="search-bar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input type="text" placeholder="Поиск терминов..." id="glossarySearch" oninput="filterGlossary(this.value)" />
+        <h1 class="view-title">Тарифы 💳</h1>
+        <p class="view-subtitle">Выберите подходящий тариф</p>
       </div>
     </div>
-    <div class="glossary-alpha-bar" id="glossaryAlphaBar"></div>
-    <div class="glossary-grid" id="glossary-grid"></div>
+    <div class="tariffs-promo-banner">
+      <span>🎉</span> Так как платформа только развивается, на все тарифы создана скидка!
+    </div>
+    <div class="tariffs-grid" id="tariffs-grid"></div>
+    <div class="tariffs-contact">
+      <p>Для приобретения пишите в Телеграмм:</p>
+      <a href="https://t.me/assylbekov09" target="_blank" class="tariffs-tg-link">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.53 8.15l-1.8 8.47c-.13.6-.49.75-.99.47l-2.74-2.02-1.32 1.27c-.15.15-.27.27-.55.27l.2-2.78 5.07-4.58c.22-.2-.05-.3-.34-.12l-6.27 3.95-2.7-.84c-.59-.18-.6-.59.12-.87l10.54-4.06c.49-.18.92.12.78.84z"/></svg>
+        @assylbekov09
+      </a>
+    </div>
   </section>
 
   <!-- ═══════════════ USERS VIEW (admin only) ═══════════════ -->
@@ -720,40 +785,7 @@
   </div>
 </div>
 
-<!-- ════ MODAL: CERTIFICATE ════ -->
-<div class="modal-overlay" id="modalCertificate" onclick="closeModal('modalCertificate')">
-  <div class="modal" style="max-width:650px" onclick="event.stopPropagation()">
-    <div class="modal-header">
-      <h2 class="modal-title">Сертификат о прохождении</h2>
-      <button class="modal-close" onclick="closeModal('modalCertificate')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    </div>
-    <div class="modal-body">
-      <div class="certificate-card" id="certificateCard">
-        <div class="certificate-logo">
-          <div class="logo-icon" style="margin:0 auto">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-          </div>
-        </div>
-        <div class="certificate-label">Сертификат</div>
-        <div class="certificate-heading">NeuralCraft</div>
-        <div class="certificate-ornament"></div>
-        <div style="font-size:0.85rem;color:#8C7B6B;margin-bottom:12px">Настоящим подтверждается, что</div>
-        <div class="certificate-student" id="certStudentName">Имя Студента</div>
-        <div style="font-size:0.85rem;color:#8C7B6B;margin-bottom:6px">успешно завершил(а)</div>
-        <div class="certificate-course" id="certCourseName">Название курса</div>
-        <div class="certificate-ornament"></div>
-        <div class="certificate-date" id="certDate">14 апреля 2026</div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn-ghost" onclick="closeModal('modalCertificate')">Закрыть</button>
-      <button class="btn-primary" onclick="downloadCertificatePDF()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Скачать PDF
-      </button>
-    </div>
-  </div>
-</div>
+<!-- Certificate modal removed -->
 
 <!-- ════ MODAL: GLOSSARY TERM ════ -->
 <div class="modal-overlay" id="modalGlossary" onclick="closeModal('modalGlossary')">
@@ -849,6 +881,72 @@
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modalAchievement')">Отмена</button>
       <button class="btn-primary" onclick="saveAchievement()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: PROMPT DB EDITOR ════ -->
+<div class="modal-overlay" id="modalPromptDb" onclick="closeModal('modalPromptDb')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title" id="promptDbModalTitle">Добавить промпт</h2>
+      <button class="modal-close" onclick="closeModal('modalPromptDb')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editingPromptDbId" value="" />
+      <div class="form-group">
+        <label class="form-label">Текст промпта *</label>
+        <textarea class="form-textarea code-textarea" id="promptDbText" rows="5" placeholder="Введите текст промпта..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Категория</label>
+        <select class="form-select" id="promptDbCategory">
+          <option value="images">🎨 Изображения</option>
+          <option value="text">✍️ Текст</option>
+          <option value="video">🎬 Видео</option>
+          <option value="code">💻 Код</option>
+          <option value="other">📦 Другое</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Изображение-результат (URL или загрузить)</label>
+        <input type="text" class="form-input" id="promptDbImageUrl" placeholder="https://..." />
+        <input type="file" id="promptDbImageFile" accept="image/*" onchange="handlePromptDbImage(event)" style="margin-top:8px" />
+        <img id="promptDbImagePreview" style="display:none;max-height:150px;border-radius:8px;margin-top:8px" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalPromptDb')">Отмена</button>
+      <button class="btn-primary" onclick="savePromptDb()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: TARIFF EDITOR (admin) ════ -->
+<div class="modal-overlay" id="modalTariff" onclick="closeModal('modalTariff')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title" id="tariffModalTitle">Редактировать тариф</h2>
+      <button class="modal-close" onclick="closeModal('modalTariff')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editingTariffRole" value="" />
+      <div class="form-group">
+        <label class="form-label">Цена (тенге/рубли) *</label>
+        <input type="text" class="form-input" id="tariffPrice" placeholder="4990" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Старая цена (зачёркнутая, для скидки)</label>
+        <input type="text" class="form-input" id="tariffOldPrice" placeholder="9990" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Преимущества (каждое с новой строки)</label>
+        <textarea class="form-textarea" id="tariffBenefits" rows="5" placeholder="Доступ к глоссарию&#10;Базовые курсы&#10;Поддержка 24/7"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalTariff')">Отмена</button>
+      <button class="btn-primary" onclick="saveTariff()">Сохранить</button>
     </div>
   </div>
 </div>
