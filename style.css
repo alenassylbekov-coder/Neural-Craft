@@ -529,7 +529,31 @@ body {
 }
 
 /* ═══════════════ COURSES GRID ═══════════════ */
-.courses-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.courses-grid { display: flex; flex-direction: column; gap: 32px; }
+
+.courses-tier-section { }
+.courses-tier-header {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 16px;
+}
+.courses-tier-icon { font-size: 1.4rem; }
+.courses-tier-name {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem; font-weight: 700;
+  color: var(--text-primary);
+}
+.courses-tier-count {
+  font-size: 0.7rem; font-weight: 700;
+  background: rgba(201,168,76,0.15); color: var(--accent-gold);
+  padding: 2px 8px; border-radius: 10px;
+}
+.courses-tier-line {
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, var(--border), transparent);
+}
+.courses-tier-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+}
 
 .course-card {
   background: var(--bg-card); border: 1px solid var(--border);

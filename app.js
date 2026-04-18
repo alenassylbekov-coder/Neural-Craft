@@ -607,7 +607,37 @@ function renderCourses(filter) {
     </div>`;
     return;
   }
-  grid.innerHTML = courses.map(c => buildCourseCard(c, progress)).join('');
+
+  // Group courses by access level
+  const tierOrder = ['novice', 'lite', 'standard', 'pro'];
+  const tierIcons = { novice: '🌱', lite: '💡', standard: '⭐', pro: '🚀' };
+  const grouped = {};
+  tierOrder.forEach(t => grouped[t] = []);
+
+  courses.forEach(c => {
+    const lvl = c.accessLevel || 'novice';
+    if (grouped[lvl]) grouped[lvl].push(c);
+    else grouped['novice'].push(c);
+  });
+
+  let html = '';
+  tierOrder.forEach(tier => {
+    const list = grouped[tier];
+    if (list.length === 0) return;
+    html += `<div class="courses-tier-section">
+      <div class="courses-tier-header">
+        <span class="courses-tier-icon">${tierIcons[tier]}</span>
+        <span class="courses-tier-name">${ROLE_LABELS[tier]}</span>
+        <span class="courses-tier-count">${list.length}</span>
+        <div class="courses-tier-line"></div>
+      </div>
+      <div class="courses-tier-grid">
+        ${list.map(c => buildCourseCard(c, progress)).join('')}
+      </div>
+    </div>`;
+  });
+
+  grid.innerHTML = html;
 }
 
 function filterCourses(type, btn) {
