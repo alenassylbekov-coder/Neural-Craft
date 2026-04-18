@@ -1888,17 +1888,19 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ─── Init ────────────────────────────────────────
-function init() {
+async function init() {
   initTheme();
   try {
     const saved = getSavedSession();
     if (saved) {
       const user = JSON.parse(saved);
+      // Load data from server first, then verify user exists
+      await loadUserData(user.id);
       const users = getUsers();
       const found = users.find(u => u.id === user.id);
       if (found) { startSession(found); return; }
     }
-  } catch(e) { /* ignore */ }
+  } catch(e) { console.log('Init session error:', e); }
   document.getElementById('authScreen').style.display = 'flex';
   document.getElementById('appShell').style.display = 'none';
 }
