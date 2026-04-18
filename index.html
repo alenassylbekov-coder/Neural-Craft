@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NeuralCraft — Платформа обучения нейросетям</title>
+  <meta name="description" content="Создавайте профессиональные курсы по нейросетям и искусственному интеллекту. Ролики и фотографии через ИИ." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════ AUTH SCREEN ═══════════════ -->
+<div class="auth-screen" id="authScreen">
+  <div class="auth-bg"></div>
+  <div class="auth-card" id="authCard">
+    <div class="auth-logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <span class="logo-text" style="color: var(--text-primary)">NeuralCraft</span>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="loginForm">
+      <h2 class="auth-title">Войти в систему</h2>
+      <p class="auth-subtitle">Введите имя пользователя и пароль</p>
+      <div class="form-group">
+        <label class="form-label">Имя пользователя</label>
+        <input type="text" class="form-input" id="loginUsername" placeholder="username" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Пароль</label>
+        <input type="password" class="form-input" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <div class="auth-error" id="loginError" style="display:none"></div>
+      <label class="remember-me" id="rememberMeLabel">
+        <input type="checkbox" id="rememberMe" checked />
+        <span>Запомнить меня</span>
+      </label>
+      <button class="btn-primary auth-submit" onclick="handleLogin()">Войти</button>
+      <p class="auth-switch">Нет аккаунта? <a href="#" onclick="switchAuth('register')">Зарегистрироваться</a></p>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="registerForm" style="display:none">
+      <h2 class="auth-title">Регистрация</h2>
+      <p class="auth-subtitle">Создайте новый аккаунт</p>
+      <div class="form-group">
+        <label class="form-label">Имя пользователя *</label>
+        <input type="text" class="form-input" id="regUsername" placeholder="myusername" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Отображаемое имя *</label>
+        <input type="text" class="form-input" id="regDisplayName" placeholder="Иван Иванов" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Пароль *</label>
+        <input type="password" class="form-input" id="regPassword" placeholder="Минимум 6 символов" autocomplete="new-password" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Повторите пароль *</label>
+        <input type="password" class="form-input" id="regPassword2" placeholder="••••••••" autocomplete="new-password" />
+      </div>
+      <div class="auth-error" id="registerError" style="display:none"></div>
+      <button class="btn-primary auth-submit" onclick="handleRegister()">Создать аккаунт</button>
+      <p class="auth-switch">Уже есть аккаунт? <a href="#" onclick="switchAuth('login')">Войти</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ APP SHELL ═══════════════ -->
+<div class="app-shell" id="appShell" style="display:none">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path d="M2 17l10 5 10-5"/>
+        <path d="M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <span class="logo-text">NeuralCraft</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="nav-item active" id="nav-dashboard" onclick="showView('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      Дашборд
+    </button>
+    <button class="nav-item" id="nav-courses" onclick="showView('courses')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Курсы
+    </button>
+    <button class="nav-item" id="nav-favorites" onclick="showView('favorites')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      Избранное
+    </button>
+    <button class="nav-item" id="nav-progress" onclick="showView('progress')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      Мой прогресс
+    </button>
+    <button class="nav-item" id="nav-achievements" onclick="showView('achievements')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+      Достижения
+    </button>
+    <button class="nav-item" id="nav-glossary" onclick="showView('glossary')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+      Глоссарий
+    </button>
+    <!-- Admin only -->
+    <button class="nav-item admin-only" id="nav-users" onclick="showView('users')" style="display:none">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Пользователи
+    </button>
+  </nav>
+
+  <div class="sidebar-bottom">
+    <!-- Export/Import (admin only) -->
+    <div class="sidebar-data-btns admin-only" id="sidebarDataBtns" style="display:none">
+      <button class="btn-ghost btn-sm sidebar-data-btn" onclick="exportData()" title="Экспорт данных">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Экспорт
+      </button>
+      <button class="btn-ghost btn-sm sidebar-data-btn" onclick="document.getElementById('importFile').click()" title="Импорт данных">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Импорт
+      </button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)" />
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="user-avatar" id="sidebarAvatar">НК</div>
+      <div class="user-info">
+        <span class="user-name" id="sidebarUsername">Пользователь</span>
+        <span class="user-role" id="sidebarRole">Новичок</span>
+      </div>
+      <button class="logout-btn" onclick="handleLogout()" title="Выйти">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</aside>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="breadcrumb" id="breadcrumb">Дашборд</div>
+    </div>
+    <div class="topbar-right">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Поиск курсов..." id="globalSearch" oninput="handleSearch(this.value)" />
+      </div>
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Сменить тему">
+        <span class="theme-icon theme-icon--light">☀️</span>
+        <span class="theme-icon theme-icon--dark" style="display:none">🌙</span>
+      </button>
+      <button class="btn-primary admin-only" id="topbarNewCourse" onclick="openCreateCourseModal()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Новый курс
+      </button>
+    </div>
+  </header>
+
+  <!-- ═══════════════ DASHBOARD ═══════════════ -->
+  <section class="view active" id="view-dashboard">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title" id="dashWelcome">Добро пожаловать! 👋</h1>
+        <p class="view-subtitle">Платформа обучения — ролики и фотографии через ИИ</p>
+      </div>
+    </div>
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--gold">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" id="stat-courses">0</span>
+          <span class="stat-label">Доступных курсов</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--brown">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" id="stat-lessons">0</span>
+          <span class="stat-label">Уроков</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" id="stat-completed">0</span>
+          <span class="stat-label">Пройдено</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" id="stat-hours">0</span>
+          <span class="stat-label">Часов контента</span>
+        </div>
+      </div>
+      <div class="stat-card admin-only" id="statUsersCard" style="display:none">
+        <div class="stat-icon stat-icon--blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" id="stat-users">0</span>
+          <span class="stat-label">Пользователей</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Widgets Row -->
+    <div class="dashboard-widgets-row">
+      <div class="activity-chart-widget" id="activity-chart"></div>
+      <div class="fact-of-day-widget" id="fact-of-day"></div>
+    </div>
+
+    <div class="section-header">
+      <h2 class="section-title">Последние курсы</h2>
+      <button class="btn-ghost" onclick="showView('courses')">Все курсы →</button>
+    </div>
+    <div class="courses-grid" id="dashboard-courses-grid">
+      <div class="empty-state" id="dashboard-empty">
+        <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+        <h3>Пока нет курсов</h3>
+        <p>Курсы появятся здесь после создания</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ COURSES ═══════════════ -->
+  <section class="view" id="view-courses">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Курсы</h1>
+        <p class="view-subtitle">Все учебные курсы платформы</p>
+      </div>
+      <button class="btn-primary admin-only" id="coursesNewBtn" onclick="openCreateCourseModal()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Новый курс
+      </button>
+    </div>
+    <div class="filter-bar" id="courseFilterBar">
+      <button class="filter-btn active" onclick="filterCourses('all', this)">Все</button>
+      <button class="filter-btn" onclick="filterCourses('available', this)">Доступные</button>
+      <button class="filter-btn" onclick="filterCourses('completed', this)">Пройденные</button>
+      <button class="filter-btn admin-only" style="display:none" onclick="filterCourses('draft', this)">Черновики</button>
+    </div>
+    <div class="courses-grid" id="courses-grid"></div>
+  </section>
+
+  <!-- ═══════════════ MY PROGRESS ═══════════════ -->
+  <section class="view" id="view-progress">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Мой прогресс</h1>
+        <p class="view-subtitle">Отслеживайте свой путь обучения</p>
+      </div>
+    </div>
+    <div class="stats-grid" id="progressStats">
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" id="progress-completed">0</span>
+          <span class="stat-label">Курсов пройдено</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--gold">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" id="progress-hours">0</span>
+          <span class="stat-label">Часов обучения</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" id="progress-lessons">0</span>
+          <span class="stat-label">Уроков пройдено</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon stat-icon--orange">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="stat-content">
+          <span class="stat-value" id="progress-certs">0</span>
+          <span class="stat-label">Сертификатов</span>
+        </div>
+      </div>
+    </div>
+    <h2 class="section-title" style="margin-bottom:16px">Курсы в процессе</h2>
+    <div class="courses-grid" id="progress-courses-grid"></div>
+  </section>
+
+  <!-- ═══════════════ FAVORITES ═══════════════ -->
+  <section class="view" id="view-favorites">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Избранное ❤️</h1>
+        <p class="view-subtitle">Курсы которые вы сохранили</p>
+      </div>
+    </div>
+    <div class="courses-grid" id="favorites-grid"></div>
+  </section>
+
+  <!-- ═══════════════ ACHIEVEMENTS ═══════════════ -->
+  <section class="view" id="view-achievements">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Достижения 🏆</h1>
+        <p class="view-subtitle">Ваши награды за прогресс в обучении</p>
+      </div>
+      <button class="btn-primary admin-only" id="achievementsManageBtn" onclick="showView('achievements-admin')" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        Управление
+      </button>
+    </div>
+    <div class="info-banner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Выполняйте задания и проходите курсы чтобы открывать новые достижения. Каждое достижение — это признание вашего прогресса!</span>
+    </div>
+    <div class="achievements-grid" id="achievements-grid"></div>
+  </section>
+
+  <!-- ═══════════════ ACHIEVEMENTS ADMIN ═══════════════ -->
+  <section class="view" id="view-achievements-admin">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Управление достижениями ⚙️</h1>
+        <p class="view-subtitle">Создавайте, редактируйте и удаляйте достижения</p>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn-ghost" onclick="showView('achievements')">← Назад</button>
+        <button class="btn-primary" onclick="openAchievementModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Добавить достижение
+        </button>
+      </div>
+    </div>
+    <div class="achievements-admin-list" id="achievements-admin-list"></div>
+  </section>
+
+  <!-- ═══════════════ GLOSSARY ═══════════════ -->
+  <section class="view" id="view-glossary">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Глоссарий 📖</h1>
+        <p class="view-subtitle">Словарь терминов ИИ и нейросетей</p>
+      </div>
+      <button class="btn-primary admin-only" id="glossaryAddBtn" onclick="openGlossaryModal()" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Добавить термин
+      </button>
+    </div>
+    <div class="glossary-search">
+      <div class="search-bar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Поиск терминов..." id="glossarySearch" oninput="filterGlossary(this.value)" />
+      </div>
+    </div>
+    <div class="glossary-alpha-bar" id="glossaryAlphaBar"></div>
+    <div class="glossary-grid" id="glossary-grid"></div>
+  </section>
+
+  <!-- ═══════════════ USERS VIEW (admin only) ═══════════════ -->
+  <section class="view" id="view-users">
+    <div class="view-header">
+      <div>
+        <h1 class="view-title">Пользователи</h1>
+        <p class="view-subtitle">База зарегистрированных пользователей</p>
+      </div>
+    </div>
+    <div class="users-table-wrap">
+      <table class="users-table" id="usersTable">
+        <thead>
+          <tr>
+            <th>Пользователь</th>
+            <th>Имя пользователя</th>
+            <th>Тариф</th>
+            <th>Дата регистрации</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══════════════ COURSE EDITOR ═══════════════ -->
+  <section class="view" id="view-course-editor">
+    <div class="view-header">
+      <button class="btn-ghost back-btn" onclick="showView('courses')">← Назад к курсам</button>
+    </div>
+    <div class="course-editor-layout">
+      <!-- Info panel -->
+      <div class="panel course-info-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Информация о курсе</h2>
+          <div class="panel-actions">
+            <button class="btn-ghost btn-sm" onclick="confirmDeleteCourse(currentCourseId)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              Удалить
+            </button>
+            <button class="btn-primary btn-sm" onclick="saveCourse()">Сохранить</button>
+          </div>
+        </div>
+        <div class="preview-upload" id="coursePreviewArea" onclick="triggerCourseImageUpload()">
+          <img id="coursePreviewImg" src="" alt="" style="display:none;" />
+          <div class="preview-placeholder" id="coursePreviewPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Нажмите для загрузки превью</span>
+            <small>PNG, JPG до 5MB или введите URL</small>
+          </div>
+          <div class="preview-overlay">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Изменить фото
+          </div>
+        </div>
+        <input type="file" id="courseImageInput" accept="image/*" style="display:none" onchange="handleCourseImageUpload(event)" />
+        <div class="url-input-row">
+          <input type="text" class="form-input" placeholder="Или вставьте URL изображения..." id="coursePreviewUrl" oninput="setCoursePreviewFromUrl(this.value)" />
+        </div>
+        <div class="form-group"><label class="form-label">Название курса *</label><input type="text" class="form-input" id="courseTitle" placeholder="Введение в нейросети" /></div>
+        <div class="form-group"><label class="form-label">Описание</label><textarea class="form-textarea" id="courseDescription" placeholder="Опишите курс..." rows="4"></textarea></div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Сложность</label><select class="form-select" id="courseLevel"><option value="beginner">Начинающий</option><option value="intermediate">Средний</option><option value="advanced">Продвинутый</option></select></div>
+          <div class="form-group"><label class="form-label">Статус</label><select class="form-select" id="courseStatus"><option value="draft">Черновик</option><option value="published">Опубликован</option></select></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Минимальный уровень доступа</label>
+          <select class="form-select" id="courseAccessLevel">
+            <option value="novice">Новичок — доступен всем</option>
+            <option value="lite">Лайт</option>
+            <option value="standard">Стандарт</option>
+            <option value="pro">Про</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Теги (через запятую)</label><input type="text" class="form-input" id="courseTags" placeholder="нейросети, ML, Midjourney" /></div>
+        <div class="form-group"><label class="form-label">Язык курса</label><select class="form-select" id="courseLanguage"><option value="ru">Русский</option><option value="en">English</option><option value="kz">Қазақша</option></select></div>
+        <div style="height:20px"></div>
+      </div>
+
+      <!-- Lessons panel -->
+      <div class="panel lessons-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Уроки <span class="lessons-count" id="lessonsCount">0</span></h2>
+          <button class="btn-primary btn-sm" onclick="openAddLessonModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Добавить урок
+          </button>
+        </div>
+        <div class="lessons-sortable" id="lessonsList">
+          <div class="empty-lessons" id="emptyLessons">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <p>Добавьте первый урок</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════ LESSON VIEWER ═══════════════ -->
+  <section class="view" id="view-lesson">
+    <div class="lesson-viewer">
+      <div class="lesson-viewer-header">
+        <div class="lesson-viewer-back">
+          <button class="btn-ghost back-btn" id="lessonBackBtn" onclick="goBackFromLesson()">← Назад к курсу</button>
+        </div>
+        <h1 class="lesson-viewer-title" id="lessonViewTitle">Урок</h1>
+        <div class="lesson-viewer-meta">
+          <span class="badge badge-gold" id="lessonViewType">Текст</span>
+          <span class="lesson-viewer-duration" id="lessonViewDuration">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span>— мин</span>
+          </span>
+          <span class="badge" id="lessonViewStatus">—</span>
+        </div>
+      </div>
+      <div class="lesson-content-rendered" id="lessonViewContent">
+        <!-- Rendered Markdown goes here -->
+      </div>
+      <!-- Practice block (if lesson has one) -->
+      <div class="practice-block" id="practiceBlock" style="display:none">
+        <div class="practice-block-header">
+          <div class="practice-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div>
+            <div class="practice-title" id="practiceTitle">Практическое задание</div>
+            <div class="practice-subtitle" id="practiceSubtitle">Выполните задание чтобы завершить урок</div>
+          </div>
+        </div>
+        <div id="practiceContent">
+          <!-- Quiz or Prompt content inserted dynamically -->
+        </div>
+        <div id="practiceResult" style="margin-top:16px"></div>
+        <div style="margin-top:16px;text-align:right">
+          <button class="btn-primary" id="practiceSubmitBtn" onclick="submitPractice()">Проверить ответы</button>
+        </div>
+      </div>
+      <!-- Lesson navigation -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;gap:12px;flex-wrap:wrap">
+        <button class="btn-ghost" id="prevLessonBtn" onclick="goToPrevLesson()" style="display:none">← Предыдущий урок</button>
+        <div style="flex:1"></div>
+        <button class="btn-primary" id="nextLessonBtn" onclick="goToNextLesson()" style="display:none">Следующий урок →</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div><!-- /app-shell -->
+
+<!-- ════ MODAL: CREATE COURSE ════ -->
+<div class="modal-overlay" id="modalCreateCourse" onclick="closeModal('modalCreateCourse')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Новый курс</h2>
+      <button class="modal-close" onclick="closeModal('modalCreateCourse')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group"><label class="form-label">Название курса *</label><input type="text" class="form-input" id="newCourseTitle" placeholder="Введение в Midjourney" /></div>
+      <div class="form-group"><label class="form-label">Краткое описание</label><textarea class="form-textarea" id="newCourseDesc" placeholder="О чём будет курс?" rows="3"></textarea></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Сложность</label><select class="form-select" id="newCourseLevel"><option value="beginner">Начинающий</option><option value="intermediate">Средний</option><option value="advanced">Продвинутый</option></select></div>
+        <div class="form-group"><label class="form-label">Уровень доступа</label><select class="form-select" id="newCourseAccess"><option value="novice">Новичок</option><option value="lite">Лайт</option><option value="standard">Стандарт</option><option value="pro">Про</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Язык</label><select class="form-select" id="newCourseLanguage"><option value="ru">Русский</option><option value="en">English</option><option value="kz">Қазақша</option></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalCreateCourse')">Отмена</button>
+      <button class="btn-primary" onclick="createCourse()">Создать курс</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: LESSON ════ -->
+<div class="modal-overlay" id="modalLesson" onclick="closeModal('modalLesson')">
+  <div class="modal modal-large" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title" id="lessonModalTitle">Добавить урок</h2>
+      <button class="modal-close" onclick="closeModal('modalLesson')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body modal-body-split">
+      <!-- Left col -->
+      <div class="lesson-preview-col">
+        <div class="lesson-preview-upload" id="lessonPreviewArea" onclick="triggerLessonImageUpload()">
+          <img id="lessonPreviewImg" src="" alt="" style="display:none;" />
+          <div class="preview-placeholder" id="lessonPreviewPlaceholder">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            <span>Превью урока</span>
+          </div>
+          <div class="preview-overlay">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Загрузить
+          </div>
+        </div>
+        <input type="file" id="lessonImageInput" accept="image/*" style="display:none" onchange="handleLessonImageUpload(event)" />
+        <input type="text" class="form-input mt-2" placeholder="Или URL изображения..." id="lessonPreviewUrl" oninput="setLessonPreviewFromUrl(this.value)" />
+
+        <div class="form-group mt-3">
+          <label class="form-label">Тип урока</label>
+          <div class="type-selector" id="lessonTypeSelector">
+            <button class="type-btn active" data-type="text" onclick="selectLessonType('text', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg>Текст
+            </button>
+            <button class="type-btn" data-type="video" onclick="selectLessonType('video', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>Видео
+            </button>
+            <button class="type-btn" data-type="quiz" onclick="selectLessonType('quiz', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Тест
+            </button>
+            <button class="type-btn" data-type="prompt" onclick="selectLessonType('prompt', this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Промпт
+            </button>
+          </div>
+        </div>
+
+        <div class="form-row mt-2">
+          <div class="form-group"><label class="form-label">Длительность (мин)</label><input type="number" class="form-input" id="lessonDuration" placeholder="30" min="1" /></div>
+          <div class="form-group"><label class="form-label">Порядок</label><input type="number" class="form-input" id="lessonOrder" placeholder="1" min="1" /></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Статус</label>
+          <select class="form-select" id="lessonStatus"><option value="draft">Черновик</option><option value="published">Опубликован</option></select>
+        </div>
+        <div class="form-group" id="videoUrlGroup" style="display:none">
+          <label class="form-label">URL видео</label>
+          <input type="text" class="form-input" id="lessonVideoUrl" placeholder="https://youtube.com/..." />
+        </div>
+      </div>
+
+      <!-- Right col -->
+      <div class="lesson-content-col">
+        <div class="form-group"><label class="form-label">Название урока *</label><input type="text" class="form-input" id="lessonTitle" placeholder="Что такое нейронная сеть?" /></div>
+        <div class="form-group"><label class="form-label">Краткое описание</label><textarea class="form-textarea" id="lessonDescription" placeholder="Что студент узнает?" rows="2"></textarea></div>
+        <div class="form-group flex-grow">
+          <label class="form-label">Контент урока (Markdown)</label>
+          <div class="editor-toolbar">
+            <button class="toolbar-btn" onclick="formatText('bold')" title="Жирный"><strong>B</strong></button>
+            <button class="toolbar-btn" onclick="formatText('italic')" title="Курсив"><em>I</em></button>
+            <button class="toolbar-btn" onclick="insertHeading()" title="Заголовок">H</button>
+            <button class="toolbar-btn" onclick="insertCode()" title="Код">&lt;/&gt;</button>
+            <button class="toolbar-btn" onclick="insertList()" title="Список">≡</button>
+            <button class="toolbar-btn" onclick="insertImageInContent()" title="Вставить фото">🖼</button>
+            <span class="toolbar-sep"></span>
+            <span class="toolbar-hint">Markdown · фото через 🖼</span>
+          </div>
+          <textarea class="form-textarea code-textarea" id="lessonContent" placeholder="# Введение&#10;&#10;Здесь напишите текст урока...&#10;&#10;```python&#10;import torch&#10;```" rows="12"></textarea>
+          <input type="file" id="contentImageInput" accept="image/*" style="display:none" onchange="insertContentImage(event)" />
+        </div>
+
+        <!-- Quiz Editor (shown when type=quiz) -->
+        <div class="quiz-editor" id="quizEditor" style="display:none">
+          <label class="form-label">Вопросы теста</label>
+          <div id="quizQuestionsEditor"></div>
+          <button class="btn-ghost btn-sm mt-2" onclick="addQuizQuestion()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Добавить вопрос
+          </button>
+        </div>
+
+        <!-- Prompt Editor (shown when type=prompt) -->
+        <div class="prompt-editor" id="promptEditor" style="display:none">
+          <div class="form-group">
+            <label class="form-label">Задание для студента</label>
+            <textarea class="form-textarea" id="promptTaskText" placeholder="Напишите промпт для создания фотореалистичного изображения кота..." rows="3"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ключевые слова для проверки (через запятую)</label>
+            <input type="text" class="form-input" id="promptKeywords" placeholder="фотореалистичный, кот, освещение, детализация" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Минимальное кол-во совпадений</label>
+            <input type="number" class="form-input" id="promptMinMatch" placeholder="3" min="1" value="3" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Дополнительные материалы</label>
+          <div class="resources-list" id="resourcesList"></div>
+          <button class="btn-ghost btn-sm mt-1" onclick="addResource()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Добавить ссылку
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <input type="hidden" id="editingLessonId" value="" />
+      <button class="btn-ghost" onclick="closeModal('modalLesson')">Отмена</button>
+      <button class="btn-primary" onclick="saveLesson()">Сохранить урок</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: CONFIRM ════ -->
+<div class="modal-overlay" id="modalConfirm" onclick="closeModal('modalConfirm')">
+  <div class="modal modal-sm" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title" id="confirmTitle">Подтверждение</h2>
+    </div>
+    <div class="modal-body">
+      <p id="confirmMessage" style="color:var(--text-secondary);line-height:1.6;"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalConfirm')">Отмена</button>
+      <button class="btn-danger" id="confirmBtn">Подтвердить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: PROFILE ════ -->
+<div class="modal-overlay" id="modalProfile" onclick="closeModal('modalProfile')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Профиль</h2>
+      <button class="modal-close" onclick="closeModal('modalProfile')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="profile-avatar-large" id="profileAvatar">НК</div>
+      <div class="form-group"><label class="form-label">Отображаемое имя</label><input type="text" class="form-input" id="profileDisplayName" /></div>
+      <div class="form-group"><label class="form-label">Новый пароль (оставьте пустым если не хотите менять)</label><input type="password" class="form-input" id="profileNewPassword" placeholder="Минимум 6 символов" /></div>
+      <div class="form-group"><label class="form-label">Подтвердите новый пароль</label><input type="password" class="form-input" id="profileNewPassword2" placeholder="••••••••" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalProfile')">Отмена</button>
+      <button class="btn-primary" onclick="saveProfile()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: CERTIFICATE ════ -->
+<div class="modal-overlay" id="modalCertificate" onclick="closeModal('modalCertificate')">
+  <div class="modal" style="max-width:650px" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Сертификат о прохождении</h2>
+      <button class="modal-close" onclick="closeModal('modalCertificate')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="certificate-card" id="certificateCard">
+        <div class="certificate-logo">
+          <div class="logo-icon" style="margin:0 auto">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+        </div>
+        <div class="certificate-label">Сертификат</div>
+        <div class="certificate-heading">NeuralCraft</div>
+        <div class="certificate-ornament"></div>
+        <div style="font-size:0.85rem;color:#8C7B6B;margin-bottom:12px">Настоящим подтверждается, что</div>
+        <div class="certificate-student" id="certStudentName">Имя Студента</div>
+        <div style="font-size:0.85rem;color:#8C7B6B;margin-bottom:6px">успешно завершил(а)</div>
+        <div class="certificate-course" id="certCourseName">Название курса</div>
+        <div class="certificate-ornament"></div>
+        <div class="certificate-date" id="certDate">14 апреля 2026</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalCertificate')">Закрыть</button>
+      <button class="btn-primary" onclick="downloadCertificatePDF()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Скачать PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: GLOSSARY TERM ════ -->
+<div class="modal-overlay" id="modalGlossary" onclick="closeModal('modalGlossary')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title" id="glossaryModalTitle">Добавить термин</h2>
+      <button class="modal-close" onclick="closeModal('modalGlossary')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editingGlossaryId" value="" />
+      <div class="form-group"><label class="form-label">Термин *</label><input type="text" class="form-input" id="glossaryTerm" placeholder="Например: Промпт" /></div>
+      <div class="form-group"><label class="form-label">Определение *</label><textarea class="form-textarea" id="glossaryDefinition" placeholder="Текстовый запрос к нейросети, описывающий желаемый результат" rows="4"></textarea></div>
+      <div class="form-group"><label class="form-label">Категория</label><select class="form-select" id="glossaryCategory">
+        <option value="general">Общее</option>
+        <option value="images">Изображения</option>
+        <option value="video">Видео</option>
+        <option value="text">Текст</option>
+        <option value="tools">Инструменты</option>
+        <option value="tech">Техническое</option>
+      </select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalGlossary')">Отмена</button>
+      <button class="btn-primary" onclick="saveGlossaryTerm()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ MODAL: ACHIEVEMENT EDITOR ════ -->
+<div class="modal-overlay" id="modalAchievement" onclick="closeModal('modalAchievement')">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title" id="achievementModalTitle">Добавить достижение</h2>
+      <button class="modal-close" onclick="closeModal('modalAchievement')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editingAchievementId" value="" />
+      <div class="form-group">
+        <label class="form-label">Иконка (эмодзи) *</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="text" class="form-input" id="achievementIcon" placeholder="🏆" style="max-width:80px;text-align:center;font-size:1.5rem" />
+          <div class="emoji-quick-picks">
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='🏆'">🏆</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='⭐'">⭐</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='🎓'">🎓</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='🚀'">🚀</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='📚'">📚</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='✅'">✅</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='💎'">💎</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='🔥'">🔥</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='❤️'">❤️</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='🦉'">🦉</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='☀️'">☀️</button>
+            <button type="button" class="emoji-pick" onclick="document.getElementById('achievementIcon').value='📝'">📝</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Название *</label>
+        <input type="text" class="form-input" id="achievementTitle" placeholder="Например: Отличник" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Описание *</label>
+        <input type="text" class="form-input" id="achievementDesc" placeholder="Например: Пройти 5 тестов" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Условие получения</label>
+        <select class="form-select" id="achievementCondition" onchange="onAchievementConditionChange()">
+          <option value="first_login">Первый вход</option>
+          <option value="lessons_viewed">Просмотрено уроков (кол-во)</option>
+          <option value="quizzes_passed">Пройдено тестов (кол-во)</option>
+          <option value="prompts_completed">Выполнено промпт-заданий (кол-во)</option>
+          <option value="courses_completed">Пройдено курсов (кол-во)</option>
+          <option value="favorites_count">Добавлено в избранное (кол-во)</option>
+          <option value="night_owl">Посещение после 22:00</option>
+          <option value="early_bird">Посещение с 5:00 до 7:00</option>
+        </select>
+      </div>
+      <div class="form-group" id="achievementNeedGroup" style="display:none">
+        <label class="form-label">Необходимое количество</label>
+        <input type="number" class="form-input" id="achievementNeed" placeholder="5" min="1" value="1" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Уровень достижения</label>
+        <select class="form-select" id="achievementTier">
+          <option value="">Без уровня</option>
+          <option value="bronze">🥉 Бронза</option>
+          <option value="silver">🥈 Серебро</option>
+          <option value="gold">🥇 Золото</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalAchievement')">Отмена</button>
+      <button class="btn-primary" onclick="saveAchievement()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ TOAST ════ -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

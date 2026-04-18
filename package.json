@@ -1,0 +1,16 @@
+{
+  "name": "neuralcraft",
+  "version": "1.0.0",
+  "description": "NeuralCraft — Платформа обучения нейросетям",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "sql.js": "^1.11.0",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.0"
+  }
+}
+
